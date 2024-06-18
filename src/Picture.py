@@ -65,12 +65,12 @@ class Picture:
         return string
 
     def sampling(self, m : float, n : float) -> None:
-        self.height = int(self.height * m) #Multiplica a altura por m
-        self.width = int(self.width * n) #Multiplica a largura por n
+        self.height = int(self.height * n) #Multiplica a altura por m
+        self.width = int(self.width * m) #Multiplica a largura por n
         new_pixels = [[None for _ in range(self.width)] for _ in range(self.height)]
         for i in range(self.height):
             for j in range(self.width):
-                new_pixels[i][j] = self.pixels[int(i/m)][int(j/n)] # Atribui o valor do pixel da imagem original na nova imagem
+                new_pixels[i][j] = self.pixels[int(i/n)][int(j/m)] # Atribui o valor do pixel da imagem original na nova imagem
 
         self.pixels = new_pixels
 
