@@ -8,7 +8,7 @@ class Picture:
 
     pixels : list[list[RGB]]
 
-    def __init__(self, file_path : str = None, m : float = 1, n : float = 1):
+    def __init__(self, file_path : str = None):
         if file_path is not None:
             try:
                 with open(file_path, 'r') as file:
@@ -30,7 +30,6 @@ class Picture:
             self.max_color = 0
             self.pixels = [[RGB() for _ in range(self.width)] for _ in range(self.height)]
 
-        self.sampling(m,n)
 
     # overloading the - operator
     def __sub__(self, other):
@@ -64,38 +63,61 @@ class Picture:
 
         return string
 
-    def sampling(self, m : float, n : float) -> None:
-        self.height = int(self.height * n) #Multiplica a altura por m
-        self.width = int(self.width * m) #Multiplica a largura por n
-        new_pixels = [[None for _ in range(self.width)] for _ in range(self.height)]
-        for i in range(self.height):
-            for j in range(self.width):
-                new_pixels[i][j] = self.pixels[int(i/m)][int(j/n)] # Atribui o valor do pixel da imagem original na nova imagem
+    def sampling(self, m : float, n : float):
+        new_width = int(self.width * m)
+        new_height = int(self.height * n)
 
-        self.pixels = new_pixels
+        new_pixels = [[RGB() for _ in range(new_width)] for _ in range(new_height)]
 
-    def nearest_neighbour_interpolation(self): #Interpolação por vizinho mais próximo
-        for i in range(self.height):
-            for j in range(self.width):
-                if self.pixels[i][j] is None: #Se o pixel for None
-                    self.pixels[i][j] = self.pixels[i - 1][j] if i > 0 else self.pixels[i + 1][j] #Atribui o valor do pixel do vizinho de cima ou de baixo
+        new_picture = Picture()
 
-    def four_neighbour_interpolation(self):
-        for i in range(self.height):
-            for j in range(self.width):
-                if self.pixels[i][j] is None:
-                    neighbours = [] #Cria uma lista de vizinhos
-                    if i > 0:
-                        neighbours.append(self.pixels[i - 1][j]) #Adiciona o vizinho de cima
-                    if i < self.height - 1:
-                        neighbours.append(self.pixels[i + 1][j]) #Adiciona o vizinho de baixo
-                    if j > 0:
-                        neighbours.append(self.pixels[i][j - 1]) #Adiciona o vizinho da esquerda
-                    if j < self.width - 1:
-                        neighbours.append(self.pixels[i][j + 1]) #Adiciona o vizinho da direita
-                    self.pixels[i][j] = RGB(sum(pixel.r for pixel in neighbours) // len(neighbours),
-                                            sum(pixel.g for pixel in neighbours) // len(neighbours),
-                                            sum(pixel.b for pixel in neighbours) // len(neighbours)) #Atribui a média dos valores dos vizinhos
+        new_picture.format = self.format
+        new_picture.width = new_width
+        new_picture.height = new_height
+        new_picture.max_color = self.max_color
+        new_picture.pixels = new_pixels
+
+        return new_picture
+
+    def nearest_neighbour_interpolation(self, m : float, n : float): #Interpolação por vizinho mais próximo
+        new_picture = self.sampling(m,n)
+        for i in range(new_picture.height):
+            for j in range(new_picture.width):
+                x = int(j/m)
+                y = int(i/n)
+                new_picture.pixels[i][j] = self.pixels[y][x]
+
+        return new_picture
+
+    def four_neighbour_interpolation(self, m : float, n : float):
+        new_picture = self.sampling(m,n)
+        for i in range (new_picture.height):
+            for j in range (new_picture.width):
+                x_ratio = (float(j)/new_picture.width) * (self.width - 1)
+                y_ratio = (float(i)/new_picture.height) * (self.height - 1)
+                x = int(x_ratio)
+                y = int(y_ratio)
+                diff_x = x_ratio - x
+                diff_y = y_ratio - y
+
+                if (x < self.width - 1) and (y < self.height - 1):
+                    n1 = self.pixels[y][x]
+                    n2 = self.pixels[y][x+1]
+                    n3 = self.pixels[y+1][x]
+                    n4 = self.pixels[y+1][x+1]
+
+                    new_picture.pixels[i][j] = RGB(
+                        int(n1.r * (1 - diff_x) * (1 - diff_y) + n2.r * (diff_x) * (1 - diff_y) + n3.r * (diff_y) * (
+                                    1 - diff_x) + n4.r * (diff_x * diff_y)),
+                        int(n1.g * (1 - diff_x) * (1 - diff_y) + n2.g * (diff_x) * (1 - diff_y) + n3.g * (diff_y) * (
+                                    1 - diff_x) + n4.g * (diff_x * diff_y)),
+                        int(n1.b * (1 - diff_x) * (1 - diff_y) + n2.b * (diff_x) * (1 - diff_y) + n3.b * (diff_y) * (
+                                    1 - diff_x) + n4.b * (diff_x * diff_y))
+                    )
+                else:
+                    new_picture.pixels[i][j] = self.pixels[y][x]
+
+        return new_picture
 
     def save_picture(self, file_path : str) -> None:
         with open(file_path, 'w') as file:
