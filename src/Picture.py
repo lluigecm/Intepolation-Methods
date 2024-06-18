@@ -70,7 +70,7 @@ class Picture:
         new_pixels = [[None for _ in range(self.width)] for _ in range(self.height)]
         for i in range(self.height):
             for j in range(self.width):
-                new_pixels[i][j] = self.pixels[int(i/n)][int(j/m)] # Atribui o valor do pixel da imagem original na nova imagem
+                new_pixels[i][j] = self.pixels[int(i/m)][int(j/n)] # Atribui o valor do pixel da imagem original na nova imagem
 
         self.pixels = new_pixels
 
